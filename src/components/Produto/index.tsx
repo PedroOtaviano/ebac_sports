@@ -1,24 +1,42 @@
-import { Produto as ProdutoType } from '../../App'
+import { useDispatch, useSelector } from 'react-redux'
 import * as S from './styles'
+import { adicionar } from '../../store/reducers/carrinho'
+import { adicionarOuRemover } from '../../store/reducers/favorito'
+import { RootReducer } from '../../store'
 
 type Props = {
-  produto: ProdutoType
-  aoComprar: (produto: ProdutoType) => void
-  favoritar: (produto: ProdutoType) => void
-  estaNosFavoritos: boolean
+  produtoId: number
 }
 
 export const paraReal = (valor: number) =>
-  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-    valor
+  new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  }).format(valor)
+
+const ProdutoComponent = ({ produtoId }: Props) => {
+  const dispatch = useDispatch()
+
+  // Busca o produto pelo ID
+  const produto = useSelector((state: RootReducer) =>
+    state.produtos.itens.find((p) => p.id === produtoId)
   )
 
-const ProdutoComponent = ({
-  produto,
-  aoComprar,
-  favoritar,
-  estaNosFavoritos
-}: Props) => {
+  // Verifica se está nos favoritos
+  const estaNosFavoritos = useSelector((state: RootReducer) =>
+    state.favorito.itens.some((f) => f.id === produtoId)
+  )
+
+  if (!produto) return null
+
+  const handleFavoritar = () => {
+    dispatch(adicionarOuRemover(produto))
+  }
+
+  const handleComprar = () => {
+    dispatch(adicionar(produto))
+  }
+
   return (
     <S.Produto>
       <S.Capa>
@@ -28,12 +46,12 @@ const ProdutoComponent = ({
       <S.Prices>
         <strong>{paraReal(produto.preco)}</strong>
       </S.Prices>
-      <S.BtnComprar onClick={() => favoritar(produto)} type="button">
+      <S.BtnComprar onClick={handleFavoritar} type="button">
         {estaNosFavoritos
           ? '- Remover dos favoritos'
           : '+ Adicionar aos favoritos'}
       </S.BtnComprar>
-      <S.BtnComprar onClick={() => aoComprar(produto)} type="button">
+      <S.BtnComprar onClick={handleComprar} type="button">
         Adicionar ao carrinho
       </S.BtnComprar>
     </S.Produto>
